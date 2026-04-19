@@ -1,0 +1,62 @@
+---
+# Play 1 — Install & Configure Nginx
+# Focus: Infrastructure and Base Packages
+- name: Play 1 - Install and Configure Nginx
+  hosts: web
+  become: true
+  tasks:
+    - name: Update apt cache and install required packages
+      apt:
+        name:
+          - nginx
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Ensure Nginx service is started and enabled
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+# Play 2 — Clone & Deploy Mini Finance Site
+# Focus: Application Deployment and Web Content
+- name: Play 2 - Clone and Deploy Mini Finance Site
+  hosts: web
+  become: true
+  vars:
+    repo_url: "https://github.com/pravinmishraaws/mini_finance.git"
+    clone_path: "/tmp/mini-finance-project"
+    web_root: "/var/www/html"
+
+  tasks:
+    - name: Clone the Mini Finance Project repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ clone_path }}"
+        accept_hostkey: true
+        version: main
+        force: yes
+
+    - name: Sync site content to the web root
+      synchronize:
+        src: "{{ clone_path }}/"
+        dest: "{{ web_root }}/"
+        recursive: yes
+        delete: yes
+      delegate_to: "{{ inventory_hostname }}"
+      notify: Reload Nginx
+
+    - name: Set proper ownership on the web root
+      file:
+        path: "{{ web_root }}"
+        owner: www-data
+        group: www-data
+        recurse: yes
+        mode: '0755'
+
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded

@@ -1,0 +1,12 @@
+# --- Terraform Specific ---
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+terraform/.terraform.lock.hcl
+
+# --- Ansible Specific ---
+ansible/*.retry
+
+# --- Editor Configs
+.vscode/
